@@ -1,4 +1,5 @@
 import random
+import time
 from collections import deque
 from functools import partial
 from multiprocessing.connection import Client
@@ -116,6 +117,8 @@ class StockGym(gym.Env):
         return state
 
     def update_history(self):
+        while not self.incoming.poll():
+            time.sleep(0.1)
         data = self.incoming.recv()
         self.history.append(data)
 

@@ -7,9 +7,9 @@ class A3CNetwork:
         with tf.variable_scope(scope):
             # Input and visual encoding layers
             self.inputs = tf.placeholder(shape=[None, state_size], dtype=tf.float32)
-            hidden1 = ctb.layers.fully_connected(self.inputs, 512)
-            hidden2 = ctb.layers.fully_connected(hidden1, 128)
-            output = ctb.layers.fully_connected(hidden2, 16)
+            hidden1 = ctb.layers.fully_connected(self.inputs, 1024)
+            hidden2 = ctb.layers.fully_connected(hidden1, 2048)
+            output = ctb.layers.fully_connected(hidden2, 1024)
 
             # Output layers for policy and value estimations
             self.policy = ctb.layers.fully_connected(output, n_classes, activation_fn=tf.nn.softmax)

@@ -23,25 +23,40 @@ def discount(x, gamma):
 
 
 class Agent(Thread):
-    def __init__(self, trainer):
+    def __init__(self, sess, trainer):
         super(Agent, self).__init__()
+        self.sess = sess
         state_dim = 9
         state_size = 111 * state_dim
-        self.env = gym.make('StockGym-v0')
-        self.local_AC = A3CNetwork(state_size, len(self.env.ratios), self.name, trainer)
-        self.update_local_ops = update_target_graph('global', self.name)
-
         self.possible_actions = list(range(110 * state_dim))
+
+        self.env = gym.make('StockGym-v0')
+        self.local_AC = A3CNetwork(state_size, len(self.possible_actions), self.name, trainer)
+        self.update_local_ops = update_target_graph('global', self.name)
 
         self.observations = []
         self.actions = []
         self.rewards = []
         self.values = []
 
-    def step_env(self):
-        pass
+    def run_episode(self):
+        while True:
+            state = self.env.reset()
+            done = False
+            while not done:
+                a_dist, value = self.sess.run([self.local_AC.policy, self.local_AC.value],
+                                              feed_dict={self.local_AC.inputs: [state]})
+                action = np.random.choice(self.possible_actions, p=a_dist[0])
+                next_state, reward, done, _ = self.env.step(action)
 
-    def train(self, sess, gamma):
+                self.observations.append(state)
+                self.actions.append(action)
+                self.rewards.append(reward)
+                self.values.append(value[0][0])
+                state = next_state
+            print(self.env.id, 'done')
+
+    def train(self, gamma):
         n = len(self.observations)
         observations = np.array(self.observations)
         actions = np.array(self.actions)
@@ -61,5 +76,8 @@ class Agent(Thread):
                      self.local_AC.actions: actions,
                      self.local_AC.advantages: advantages}
 
-        value_loss, policy_loss, entropy, grads, var_norms, _ = sess.run(run_list, feed_dict=feed_dict)
+        value_loss, policy_loss, entropy, grads, var_norms, _ = self.sess.run(run_list, feed_dict=feed_dict)
         return value_loss / n, policy_loss / n, entropy / n, grads, var_norms
+
+    def run(self):
+        self.run_episode()

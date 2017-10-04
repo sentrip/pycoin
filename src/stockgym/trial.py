@@ -1,9 +1,10 @@
 import random
+import math
 import time
 from multiprocessing.connection import Listener
 
 
-def gen_data():
+def gen_data(x):
     start = [0, 0]
     types = ['article', 'blog', 'reddit', 'twitter', 'stock']
     data = {}
@@ -14,7 +15,7 @@ def gen_data():
             if i and q == 0:
                 start[0] += 1
             st = ''.join(map(chr, [65 + start[i] % 26 for i in range(2)]))
-            res = random.random()
+            res = math.sin(x)
             if t == 'stock':
                 res *= 150
             data[t][st] = res
@@ -24,9 +25,11 @@ def gen_data():
 
 def send_data():
     conn = Listener(('localhost', 6100), authkey=b'veryscrape').accept()
+    t = 0.001
     while True:
-        conn.send(gen_data())
+        conn.send(gen_data(t))
         time.sleep(0.5)
+        t += 1
 
 
 if __name__ == '__main__':
