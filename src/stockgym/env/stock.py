@@ -1,14 +1,15 @@
 import random
 from collections import deque
-from multiprocessing.connection import Client
 from functools import partial
-import empyrical
+from multiprocessing.connection import Client
 
-import gym
 import bottleneck as bn
+import empyrical
+import gym
 import numpy as np
 from gym import spaces
 from gym.utils import seeding
+
 """
 Add this to `gym/envs/__init__.py`:
 
@@ -84,6 +85,7 @@ class StockGym(gym.Env):
         return self.state
 
     def _step(self, action):
+        print(self.id, action)
         # Act
         self.submit_order(action)
         # Observe
