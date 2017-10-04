@@ -5,8 +5,8 @@ from time import sleep
 import tensorflow as tf
 from stockgym.ac3 import AC3Network
 
-from stockgym.agent import Agent
 from stockgym.distributor import Distributor
+from stockgym.prev.agent import Agent
 
 if __name__ == '__main__':
     max_episode_length = 10000

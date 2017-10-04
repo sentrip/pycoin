@@ -2,7 +2,7 @@ import tensorflow as tf
 import tensorflow.contrib as ctb
 
 
-class AC3Network:
+class A3CNetwork:
     def __init__(self, state_size, n_classes, scope, trainer):
         with tf.variable_scope(scope):
             # Input and visual encoding layers
