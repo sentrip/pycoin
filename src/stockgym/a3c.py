@@ -8,8 +8,8 @@ class A3CNetwork:
             # Input and visual encoding layers
             self.inputs = tf.placeholder(shape=[None, state_size], dtype=tf.float32)
             hidden1 = ctb.layers.fully_connected(self.inputs, 1024)
-            hidden2 = ctb.layers.fully_connected(hidden1, 2048)
-            output = ctb.layers.fully_connected(hidden2, 1024)
+            #hidden2 = ctb.layers.fully_connected(hidden1, 2048)
+            output = ctb.layers.fully_connected(hidden1, 1024)
 
             # Output layers for policy and value estimations
             self.policy = ctb.layers.fully_connected(output, n_classes, activation_fn=tf.nn.softmax)
@@ -20,14 +20,14 @@ class A3CNetwork:
                 self.actions = tf.placeholder(shape=[None], dtype=tf.int32)
                 self.actions_onehot = tf.one_hot(self.actions, n_classes, dtype=tf.float32)
                 self.target_v = tf.placeholder(shape=[None], dtype=tf.float32)
-                self.advantages = tf.placeholder(shape=[None], dtype=tf.float32)
+                self.rewards = tf.placeholder(shape=[None], dtype=tf.float32)
 
                 self.responsible_outputs = tf.reduce_sum(self.policy * self.actions_onehot, [1])
 
                 # Loss functions
                 self.value_loss = 0.5 * tf.reduce_sum(tf.square(self.target_v - tf.reshape(self.value, [-1])))
                 self.entropy = - tf.reduce_sum(self.policy * tf.log(self.policy))
-                self.policy_loss = -tf.reduce_sum(tf.log(self.responsible_outputs) * self.advantages)
+                self.policy_loss = -tf.reduce_sum(tf.log(self.responsible_outputs) * self.rewards)
                 self.loss = 0.5 * self.value_loss + self.policy_loss - self.entropy * 0.01
 
                 # Get gradients from local network using local losses

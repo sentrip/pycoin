@@ -1,9 +1,12 @@
-import gym
-import tensorflow as tf
-import scipy.signal
+import random
 from threading import Thread
-from stockgym.a3c import A3CNetwork
+
+import gym
 import numpy as np
+import scipy.signal
+import tensorflow as tf
+
+from stockgym.a3c import A3CNetwork
 
 
 # Copies one set of variables to another.
@@ -23,9 +26,11 @@ def discount(x, gamma):
 
 
 class Agent(Thread):
-    def __init__(self, sess, trainer):
+    def __init__(self, sess, trainer, coord, gamma):
         super(Agent, self).__init__()
         self.sess = sess
+        self.coord = coord
+        self.gamma = gamma
         state_dim = 9
         state_size = 111 * state_dim
         self.possible_actions = list(range(110 * state_dim))
@@ -39,45 +44,55 @@ class Agent(Thread):
         self.rewards = []
         self.values = []
 
-    def run_episode(self):
-        while True:
-            state = self.env.reset()
-            done = False
-            while not done:
-                a_dist, value = self.sess.run([self.local_AC.policy, self.local_AC.value],
-                                              feed_dict={self.local_AC.inputs: [state]})
+    def run_episode(self, el):
+        state = self.env.reset()
+        done = False
+        c=0
+        while not done:
+            a_dist, value = self.sess.run([self.local_AC.policy, self.local_AC.value],
+                                          feed_dict={self.local_AC.inputs: [state]})
+
+            if np.random.random() < el:
+                action = random.choice(self.possible_actions)
+            else:
                 action = np.random.choice(self.possible_actions, p=a_dist[0])
-                next_state, reward, done, _ = self.env.step(action)
 
-                self.observations.append(state)
-                self.actions.append(action)
-                self.rewards.append(reward)
-                self.values.append(value[0][0])
-                state = next_state
-            print(self.env.id, 'done')
+            next_state, reward, done, _ = self.env.step(action)
+            if c % 1 == 0:
+                print('{}, {:3d}, {:.2f}, {:.2f}'.format(self.env.id, action, reward, self.env.agent_value))
+            self.observations.append(state)
+            self.actions.append(action)
+            self.rewards.append(reward)
+            self.values.append(value)
+            state = next_state
+            c += 1
 
-    def train(self, gamma):
+    def train(self):
         n = len(self.observations)
         observations = np.array(self.observations)
         actions = np.array(self.actions)
         rewards = np.array(self.rewards)
         values = np.array(self.values)
 
-        discounted_rewards = discount(rewards, gamma)[:-1]
-        advantages = rewards + gamma * values[1:] - values[:-1]
-        advantages = discount(advantages, gamma)
+        discounted_rewards = discount(rewards, self.gamma)
 
         run_list = [self.local_AC.value_loss, self.local_AC.policy_loss,
                     self.local_AC.entropy, self.local_AC.grad_norms,
                     self.local_AC.var_norms, self.local_AC.apply_grads]
 
-        feed_dict = {self.local_AC.target_v: discounted_rewards,
+        feed_dict = {self.local_AC.target_v: values.reshape(-1),
                      self.local_AC.inputs: np.vstack(observations),
                      self.local_AC.actions: actions,
-                     self.local_AC.advantages: advantages}
+                     self.local_AC.rewards: discounted_rewards}
 
         value_loss, policy_loss, entropy, grads, var_norms, _ = self.sess.run(run_list, feed_dict=feed_dict)
         return value_loss / n, policy_loss / n, entropy / n, grads, var_norms
 
     def run(self):
-        self.run_episode()
+        el = 0.99
+        while not self.coord.should_stop():
+            self.run_episode(el)
+            if len(self.observations) > 0:
+                _ = self.train()
+            self.sess.run(self.update_local_ops)
+            el *= 0.99

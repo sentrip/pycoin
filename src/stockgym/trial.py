@@ -1,4 +1,3 @@
-import random
 import math
 import time
 from multiprocessing.connection import Listener
@@ -15,7 +14,10 @@ def gen_data(x):
             if i and q == 0:
                 start[0] += 1
             st = ''.join(map(chr, [65 + start[i] % 26 for i in range(2)]))
-            res = math.sin(x)
+            if i < 60:
+                res = math.sin(x)
+            else:
+                res = 0.5
             if t == 'stock':
                 res *= 150
             data[t][st] = res
@@ -28,7 +30,7 @@ def send_data():
     t = 0.001
     while True:
         conn.send(gen_data(t))
-        time.sleep(0.5)
+        time.sleep(2)
         t += 1
 
 

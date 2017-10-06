@@ -86,7 +86,6 @@ class StockGym(gym.Env):
         return self.state
 
     def _step(self, action):
-        print(self.id, action)
         # Act
         self.submit_order(action)
         # Observe
@@ -98,7 +97,7 @@ class StockGym(gym.Env):
         self.state = self.build_state()
 
         # Evaluate
-        reward = self.agent_market_ratio
+        reward = self.agent_value / self.initial_balance - 1
         return self.state, reward, self.agent_is_broke, {}
 
     def _close(self):
