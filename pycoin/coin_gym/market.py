@@ -6,7 +6,7 @@ import bottleneck as bn
 
 
 def sin_distribute(initial_price):
-    t = 0
+    t = random.random() * 2 * np.pi
     dt = np.pi / np.random.randint(50, 500)
     while True:
         cv = np.sin(t) + np.sin(5 * t) * 0.3

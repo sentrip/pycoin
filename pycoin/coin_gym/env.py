@@ -29,7 +29,7 @@ class CoinGym(gym.Env):
     def state(self):
         return np.array([
             self.agent.balance, self.agent.coin,
-            *self.market.history[-1],
+            self.market.history[-1][3],
             *self.market.sma_crossover
         ])
 
@@ -52,12 +52,12 @@ class CoinGym(gym.Env):
         if action == 2:
             if self.agent.balance < self.market.price:
                 return -0.1
-            elif self.agent.recently_bought:
+            elif self.agent.recently_bought or self.agent.last_investment['order'] != 0:
                 return -0.02
         elif action == 0:
             if self.agent.coin < 0.0001:
                 return -0.1
-            elif self.agent.recently_sold:
+            elif self.agent.recently_sold or self.agent.last_investment['order'] == 0:
                 return -0.02
         elif action == 1:
             if self.agent.did_nothing:

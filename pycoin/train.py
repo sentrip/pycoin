@@ -1,21 +1,18 @@
-from tensorforce.agents import PPOAgent
+from tensorforce.agents import DQNAgent
 from coin_gym import make_gym
 
 
-agent = PPOAgent(
-    states_spec=dict(type='float', shape=(9,)),
+agent = DQNAgent(
+    states_spec=dict(type='float', shape=(5,)),
     actions_spec=dict(type='int', num_actions=3),
     network_spec=[
-        dict(type='dense', size=128, activation='relu'),
-        dict(type='dense', size=64, activation='relu'),
+        # dict(type='dense', size=128, activation='relu'),
+        dict(type='dense', size=32, activation='relu'),
+        dict(type='dense', size=32, activation='relu'),
         dict(type='dense', size=32)
     ],
-    batch_size=128,
-    step_optimizer=dict(
-        type='adam',
-        learning_rate=1e-3
-    )
-
+    batch_size=1024,
+    memory=dict(type='replay', capacity=2000)
 )
 
 MAX_STEPS = 200000
@@ -37,7 +34,7 @@ while True:
         agent.observe(reward=reward, terminal=done and steps < MAX_STEPS)
         ave_reward += reward
         steps += 1
-        if steps % 50000 == 0:
+        if steps % 10000 == 0:
             print('Step %10d, Value: %.1f' % (steps, env.agent.value))
     episodes += 1
     print('\n\nEpisode %4d\n\tSteps - %d\n\tTotal reward - %.3f\n\tAverage reward - %.3f' %
