@@ -47,6 +47,8 @@ class CoinGym(gym.Env):
         return self.state, final_reward, self.agent.broke, {}
 
     def anti_reward(self, action):
+        if self.agent.broke:
+            return -100
         if action == 2:
             if self.agent.balance < self.market.price:
                 return -0.1
@@ -63,5 +65,10 @@ class CoinGym(gym.Env):
         return 10000
 
     def reward(self, action):
-        reward = (self.agent.value - self.agent.previous_value) / self.agent.previous_value
+        if self.agent.last_investment['order']:
+            reward = self.agent.value / self.agent.last_investment['value'] - 1
+            if action == 0:
+                reward *= 10
+        else:
+            reward = 0
         return round(reward, 3)
