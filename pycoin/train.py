@@ -12,7 +12,7 @@ agent = DQNAgent(
         dict(type='dense', size=32)
     ],
     batch_size=1024,
-    memory=dict(type='replay', capacity=2000)
+    memory=dict(type='replay', capacity=10000)
 )
 
 MAX_STEPS = 200000
