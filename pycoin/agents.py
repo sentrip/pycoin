@@ -266,3 +266,4 @@ class TensorForceAgent(RLAgent):
 #         mini_batch = random.sample(self.memory, min(len(self.memory), self.batch_size))
 #         self.train_critic(mini_batch)
 #         self.train_actor(mini_batch)
+
