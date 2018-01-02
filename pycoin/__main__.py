@@ -82,16 +82,6 @@ env_options(live_parser)
 
 args = parser.parse_args()
 
-# Setup logging
-log = logging.getLogger('pycoin')
-log.setLevel(args.log_level)
-stream = logging.StreamHandler(stream=sys.stdout)
-stream.setLevel(args.log_level)
-fmt = logging.Formatter(fmt='[ %(asctime)-15s ] %(levelname)-5s: %(name)-15s: %(message)s',
-                        datefmt='%D %H:%M:%S')
-stream.setFormatter(fmt)
-log.addHandler(stream)
-
 # Env setup
 assert len(sys.argv) > 2, \
     "Please provide environment type and agent file: python3 -m pycoin [TYPE] [AGENT_FILE] --args"
@@ -104,6 +94,15 @@ env_kwargs = dict(
     time_fee=args.time_fee
 )
 
+# Setup logging
+log = logging.getLogger('pycoin')
+log.setLevel(args.log_level)
+stream = logging.StreamHandler(stream=sys.stdout)
+stream.setLevel(args.log_level)
+fmt = logging.Formatter(fmt='[ %(asctime)-15s ] %(levelname)-5s: %(name)-15s: %(message)s',
+                        datefmt='%D %H:%M:%S')
+stream.setFormatter(fmt)
+log.addHandler(stream)
 
 # Data setup
 _symbols = get_symbols(args.symbols if env_type == 'train' else args.symbol)
