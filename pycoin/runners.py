@@ -81,6 +81,9 @@ def live(env, agent, live_training=False, real_trading=False, render=True):
     symbol = env.df['symbol'].iloc[0]
     if real_trading:
         trader = Trader(os.environ['BITFINEX_KEY'], os.environ['BITFINEX_SECRET'])
+        wallet = trader.wallet()
+        env.balance = wallet['usd']
+        env.coin = wallet[symbol.lower().replace('usd', '')]
     else:
         trader = type('', (), {'order': lambda *a, **kw: None})  # todo improve dummy trader
 
