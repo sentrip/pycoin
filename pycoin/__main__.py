@@ -95,14 +95,15 @@ env_kwargs = dict(
 )
 
 # Setup logging
-log = logging.getLogger('pycoin')
-log.setLevel(args.log_level)
-stream = logging.StreamHandler(stream=sys.stdout)
-stream.setLevel(args.log_level)
-fmt = logging.Formatter(fmt='[ %(asctime)-15s ] %(levelname)-5s: %(name)-15s: %(message)s',
-                        datefmt='%D %H:%M:%S')
-stream.setFormatter(fmt)
-log.addHandler(stream)
+for name in ['pycoin', 'btfx_trader']:
+    log = logging.getLogger(name)
+    log.setLevel(args.log_level)
+    stream = logging.StreamHandler(stream=sys.stdout)
+    stream.setLevel(args.log_level)
+    fmt = logging.Formatter(fmt='[ %(asctime)-15s ] %(levelname)-5s: %(name)-15s: %(message)s',
+                            datefmt='%D %H:%M:%S')
+    stream.setFormatter(fmt)
+    log.addHandler(stream)
 
 # Data setup
 _symbols = get_symbols(args.symbols if env_type == 'train' else args.symbol)
