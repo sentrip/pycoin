@@ -94,12 +94,12 @@ def live(env, agent, live_training=False, real_trading=False, render=True):
         while not done:
             action = agent.act(state, deterministic=True, filtered=True)
 
-            if real_trading:
+            if real_trading and action > 0:
+                wallet = trader.wallet()
+                env.balance = wallet['usd']
+                env.coin = wallet[symbol.lower().replace('usd', '')]
                 order = env.trade_ratios[action] * env.trade_ratio(env.trade_ratios[action])
-                if order != 0.:
-                    trader.order(symbol, env._price, percentage=order, pad_price=0.001, wait_execution=False)
-                    env.balance = trader.cached_wallet['usd']
-                    env.coin = trader.cached_wallet[symbol.lower().replace('usd', '')]
+                trader.order(symbol, env._price, percentage=order, pad_price=0.001, wait_execution=False)
 
             next_state, reward, done, _ = env.step(action)
             if live_training:
