@@ -34,22 +34,17 @@ class BackTest(Trading):
         self.initial_price = self._price
         return state
 
-    def trade_ratio(self, order):
-        if order > 0:
-            ratio = 1 / max(1, self.balance / (self.value / 2 / self.max_position))
-        else:
-            ratio = 1 / max(1, self.coin * self._price / (self.value / 2 / self.max_position))
-        return min(ratio, 1)
-
     def order(self, order):
         if abs(self.obs_pos[-1] + order) > self.max_position:
             order = 0
-        ratio = self.trade_ratio(order)
-        n = (self.balance / self._price if order > 0 else self.coin) * order * ratio
-        trade_cost = n * self._price * self.fee / 100 * order
-        self.balance = max(self.balance - self._price * n - trade_cost, 0)
-        self.coin = max(self.coin + n - trade_cost / self._price, 0)
-        self.amount = n
+        trade_value = self.value / self.max_position / 2
+        n = trade_value / self._price * order
+        trade_cost = n * self._price * self.fee * order
+        buy_fee = trade_cost * int(order < 0)
+        sell_fee = trade_cost / self._price * int(order > 0)
+        self.balance = max(self.balance - self._price * n - buy_fee, 0)
+        self.coin = max(self.coin + n - sell_fee, 0)
+        self.amount = n - sell_fee * self._price
 
     @property
     def value(self):
