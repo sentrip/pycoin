@@ -80,10 +80,9 @@ def live(env, agent, live_training=False, real_trading=False, render=True):
     assert isinstance(env, LiveTrading), '`LiveTrading` environment required for `live`'
     symbol = env.df['symbol'].iloc[0]
     if real_trading:
-        trader = Trader(os.environ['BITFINEX_KEY'], os.environ['BITFINEX_SECRET'])
-        wallet = trader.wallet()
-        env.balance = wallet['usd']
-        env.coin = wallet[symbol.lower().replace('usd', '')]
+        trader = Trader(os.environ['BITFINEX_KEY'], os.environ['BITFINEX_SECRET'], symbols=[symbol])
+        env.balance = trader._wallet['usd']
+        env.coin = trader._wallet[symbol.lower().replace('usd', '')]
     else:
         trader = type('', (), {'order': lambda *a, **kw: None})  # todo improve dummy trader
 
@@ -95,14 +94,20 @@ def live(env, agent, live_training=False, real_trading=False, render=True):
         state = env.reset()
         done = False
         while not done:
+            if real_trading:
+                env.balance = trader._wallet['usd']
+                env.coin = trader._wallet[symbol.lower().replace('usd', '')]
+                agent.pos = int(round(trader.position(symbol) * agent.max_pos, 0))
+                trader.cancel_all(older_than=30)
+
             action = agent.act(state, deterministic=True, filtered=True)
 
             if real_trading and action > 0:
-                wallet = trader.wallet()
-                env.balance = wallet['usd']
-                env.coin = wallet[symbol.lower().replace('usd', '')]
-                order = env.trade_ratios[action] * env.trade_ratio(env.trade_ratios[action])
-                trader.order(symbol, env._price, percentage=order, pad_price=0.001, wait_execution=False)
+                amount = trader.value / env.max_position / 2 * env.trade_ratios[action]
+                try:
+                    trader.order(symbol, env._price, dollar_amount=amount)
+                except AssertionError:
+                    log.error('Failed to execute order %.2f at %.2f' % (amount, env._price))
 
             next_state, reward, done, _ = env.step(action)
             if live_training:
